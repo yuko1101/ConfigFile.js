@@ -1,13 +1,3 @@
-# ConfigFile.js
-A config file management library for Node.js.
-
-## Installation
-```sh-session
-npm i config_file.js
-```
-
-## Usage
-```js
 const { ConfigFile } = require("config_file.js");
 
 const config = new ConfigFile("./config.json", {});
@@ -27,9 +17,3 @@ async function run() {
 
     await config.save();
 }
-```
-
-Also, you can edit and save in a single line.
-```js
-await config.set("key", "value").save();
-```
