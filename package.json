@@ -1,7 +1,7 @@
 {
-  "name": "template-package.ts",
-  "version": "1.0.1",
-  "description": "A Template for Typescript package.",
+  "name": "config_file.js",
+  "version": "1.0.0",
+  "description": "A config file management library for Node.js.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -10,9 +10,20 @@
     "build": "node -e \"const fs = require('fs'); if (fs.existsSync('./dist')) fs.rmSync('./dist', {recursive: true});\" && npx tsc",
     "prepublishOnly": "npm run build"
   },
-  "keywords": [],
+  "keywords": [
+    "config",
+    "json"
+  ],
   "author": "yuko1101 (https://github.com/yuko1101)",
   "license": "MIT",
+  "homepage": "https://github.com/yuko1101/ConfigFile.js#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yuko1101/ConfigFile.js"
+  },
+  "bugs": {
+    "url": "https://github.com/yuko1101/ConfigFile.js/issues"
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "@typescript-eslint/parser": "^5.57.0",

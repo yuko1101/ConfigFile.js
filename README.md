@@ -1,2 +1,2 @@
-# package-template.ts
+# ConfigFile.js
 A Template for Typescript package.
