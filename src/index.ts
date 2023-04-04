@@ -19,17 +19,18 @@ export class ConfigFile {
         this.route = route;
     }
 
-    async save(compact = false): Promise<ConfigFile> {
+
+    saveSync(compact = false): ConfigFile {
         if (this.filePath === null) return this;
         const text = compact ? JSON.stringify(this.data) : JSON.stringify(this.data, null, 4);
         fs.writeFileSync(this.filePath, text);
         return this;
     }
 
-    async load(): Promise<ConfigFile> {
+    loadSync(): ConfigFile {
         if (this.filePath === null) return this;
         if (!fs.existsSync(this.filePath)) {
-            await this.save();
+            this.saveSync();
         }
         const text = fs.readFileSync(this.filePath, "utf-8");
         try {
@@ -39,6 +40,36 @@ export class ConfigFile {
         }
         return this;
     }
+
+    async save(compact = false): Promise<ConfigFile> {
+        if (this.filePath === null) return this;
+        const filePath: string = this.filePath;
+        const text = compact ? JSON.stringify(this.data) : JSON.stringify(this.data, null, 4);
+        await new Promise<void>((resolve, reject) => fs.writeFile(filePath, text, { encoding: "utf-8" }, (err) => {
+            if (err) reject(err);
+            resolve();
+        }));
+        return this;
+    }
+
+    async load(): Promise<ConfigFile> {
+        if (this.filePath === null) return this;
+        const filePath: string = this.filePath;
+        if (!fs.existsSync(filePath)) {
+            await this.save();
+        }
+        const text = await new Promise<string>((resolve, reject) => fs.readFile(filePath, { encoding: "utf-8" }, (err, data) => {
+            if (err) reject(err);
+            resolve(data);
+        }));
+        try {
+            this.data = JSON.parse(text);
+        } catch (e) {
+            console.error(e);
+        }
+        return this;
+    }
+
 
     set(key: string | number, value: JsonElement): ConfigFile {
         this.get(key).setHere(value);

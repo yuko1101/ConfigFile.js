@@ -15,7 +15,7 @@ const config = new ConfigFile("./config.json", {});
 run();
 
 async function run() {
-    await config.load();
+    await config.load(); // or just config.loadSync();
 
     config.set("a", 2); // { "a": 2 }
     config.set("b", 4); // { "a": 2, "b": 4 }
@@ -25,7 +25,7 @@ async function run() {
 
     console.log(config.get("c", "d", 0).getValue()); // Output: 6
 
-    await config.save();
+    await config.save(); // or just config.saveSync();
 }
 ```
 
