@@ -276,7 +276,9 @@ class PathResolver extends ConfigFile {
 
 }
 
-export type JsonElement = number | boolean | string | { [s: string]: JsonElement } | JsonElement[] | null;
+export type JsonObject = { [s: string]: JsonElement };
+export type JsonArray = JsonElement[];
+export type JsonElement = number | boolean | string | JsonObject | JsonArray | null;
 
 export function isJsonElement(value: unknown): value is JsonElement {
     const type = typeof value;
@@ -288,4 +290,22 @@ export function isJsonElement(value: unknown): value is JsonElement {
     } else {
         return Object.values(value).every(v => isJsonElement(v));
     }
+}
+
+export function isJsonObject(value: unknown): value is JsonObject {
+    const type = typeof value;
+    if (type !== "object" || value === null || value === undefined) return false;
+
+    if (Array.isArray(value)) return false;
+
+    return Object.values(value).every(v => isJsonElement(v));
+}
+
+export function isJsonArray(value: unknown): value is JsonArray {
+    const type = typeof value;
+    if (type !== "object" || value === null || value === undefined) return false;
+
+    if (!Array.isArray(value)) return false;
+
+    return value.every(e => isJsonElement(e));
 }
