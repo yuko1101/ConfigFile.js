@@ -276,9 +276,14 @@ class PathResolver extends ConfigFile {
 
 }
 
-export type JsonObject = { [s: string]: JsonElement };
-export type JsonArray = JsonElement[];
-export type JsonElement = number | boolean | string | JsonObject | JsonArray | null;
+export type JsonElement = number | boolean | string | IJsonObject | IJsonArray | null;
+export type JsonObject<T extends JsonElement = JsonElement> = { [s: string]: T };
+export type JsonArray<T extends JsonElement = JsonElement> = T[];
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IJsonObject extends JsonObject { }
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IJsonArray extends JsonArray { }
 
 export function isJsonElement(value: unknown): value is JsonElement {
     const type = typeof value;
