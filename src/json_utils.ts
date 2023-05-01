@@ -95,6 +95,10 @@ export class JsonManager {
         }
     }
 
+    getAs<T extends JsonElement>(key?: string | number | undefined): T {
+        return this.getValue(key) as T;
+    }
+
     get(...keys: (string | number)[]): PathResolver {
         const newRoute = [...this.route, ...keys];
         return new PathResolver(this, newRoute);
