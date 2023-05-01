@@ -62,7 +62,7 @@ export class JsonManager {
         }
     }
 
-    getAs<T extends JsonElement>(key?: string | number | undefined): T {
+    getAs<T extends JsonElement | undefined>(key?: string | number | undefined): T {
         return this.getValue(key) as T;
     }
 
