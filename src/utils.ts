@@ -1,4 +1,4 @@
-import { JsonObject } from "./config_file";
+import { JsonObject } from "./json_utils";
 import fs from "fs";
 
 /**
