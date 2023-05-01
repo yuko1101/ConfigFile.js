@@ -22,8 +22,8 @@ export class ConfigFile extends JsonManager implements IConfigFile {
     readonly filePath: string | null;
     readonly defaultConfig: JsonElement;
 
-    constructor(filePath: string | null, defaultConfig: JsonElement, route: (string | number)[] = []) {
-        super(JSON.parse(JSON.stringify(defaultConfig)), route);
+    constructor(filePath: string | null, defaultConfig: JsonElement, readonly = false, route: (string | number)[] = []) {
+        super(JSON.parse(JSON.stringify(defaultConfig)), readonly, route);
         this.filePath = filePath;
         this.defaultConfig = defaultConfig;
     }

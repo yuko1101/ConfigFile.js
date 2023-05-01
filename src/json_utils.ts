@@ -1,63 +1,30 @@
-export type JsonElement = number | boolean | string | JsonObject | JsonArray | null;
-type _JsonObject<T extends JsonElement = JsonElement> = { [s: string]: T };
-type _JsonArray<T extends JsonElement = JsonElement> = T[];
-
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface JsonObject extends _JsonObject { }
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface JsonArray extends _JsonArray { }
-
-export function isJsonElement(value: unknown): value is JsonElement {
-    const type = typeof value;
-    if (type === "number" || type === "boolean" || type === "string" || value === null) return true;
-    if (type !== "object" || value === undefined) return false;
-
-    if (Array.isArray(value)) {
-        return value.every(e => isJsonElement(e));
-    } else {
-        return Object.values(value).every(v => isJsonElement(v));
-    }
-}
-
-export function isJsonObject(value: unknown): value is JsonObject {
-    const type = typeof value;
-    if (type !== "object" || value === null || value === undefined) return false;
-
-    if (Array.isArray(value)) return false;
-
-    return Object.values(value).every(v => isJsonElement(v));
-}
-
-export function isJsonArray(value: unknown): value is JsonArray {
-    const type = typeof value;
-    if (type !== "object" || value === null || value === undefined) return false;
-
-    if (!Array.isArray(value)) return false;
-
-    return value.every(e => isJsonElement(e));
-}
-
+// TODO: return immutable values with structuredClone() if it is readonly.
 export class JsonManager {
     private _data: JsonElement;
     public get data(): JsonElement {
         return this._data;
     }
     public set data(value: JsonElement) {
+        if (this.readonly) throw new EditReadonlyError();
         this._data = value;
     }
+    readonly readonly: boolean;
     readonly route: (string | number)[];
 
-    constructor(data: JsonElement, route: (string | number)[] = []) {
+    constructor(data: JsonElement, readonly = false, route: (string | number)[] = []) {
         this._data = data;
+        this.readonly = readonly;
         this.route = route;
     }
 
     set(key: string | number, value: JsonElement): this {
+        if (this.readonly) throw new EditReadonlyError();
         this.get(key).setHere(value);
         return this;
     }
 
     add(value: JsonElement): this {
+        if (this.readonly) throw new EditReadonlyError();
         if (!Array.isArray(this.getValue())) this.setHere([]);
 
         (this.getValue() as JsonElement[]).push(value);
@@ -135,6 +102,7 @@ export class JsonManager {
     }
 
     private setHere(value: JsonElement) {
+        if (this.readonly) throw new EditReadonlyError();
         if (this.route.length === 0) {
             this.data = value;
             return;
@@ -180,6 +148,7 @@ export class JsonManager {
      * @returns Whether there have been any changes.
      */
     private createPath(route: (string | number)[], arrayAtLastPath: boolean | null = null) {
+        if (this.readonly) throw new EditReadonlyError();
         let isChanged = false;
         function changed() {
             isChanged = true;
@@ -191,6 +160,7 @@ export class JsonManager {
     }
 
     private _createPath(data: JsonElement, arrayAtLastPath: boolean | null, changed: () => void, remainingRoute: (string | number)[] = []): JsonElement {
+        if (this.readonly) throw new EditReadonlyError();
         const key = remainingRoute.shift();
         const isArrayKey = typeof key === "number";
         const isObjectKey = !isArrayKey && key !== undefined;
@@ -237,7 +207,7 @@ export class PathResolver extends JsonManager {
     readonly manager: JsonManager;
 
     constructor(manager: JsonManager, route: (string | number)[]) {
-        super(manager.data, route);
+        super(manager.data, manager.readonly, route);
 
         this.manager = manager;
     }
@@ -256,3 +226,43 @@ export class PathResolver extends JsonManager {
 
 }
 
+export class EditReadonlyError extends Error { }
+
+export type JsonElement = number | boolean | string | JsonObject | JsonArray | null;
+type _JsonObject<T extends JsonElement = JsonElement> = { [s: string]: T };
+type _JsonArray<T extends JsonElement = JsonElement> = T[];
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface JsonObject extends _JsonObject { }
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface JsonArray extends _JsonArray { }
+
+export function isJsonElement(value: unknown): value is JsonElement {
+    const type = typeof value;
+    if (type === "number" || type === "boolean" || type === "string" || value === null) return true;
+    if (type !== "object" || value === undefined) return false;
+
+    if (Array.isArray(value)) {
+        return value.every(e => isJsonElement(e));
+    } else {
+        return Object.values(value).every(v => isJsonElement(v));
+    }
+}
+
+export function isJsonObject(value: unknown): value is JsonObject {
+    const type = typeof value;
+    if (type !== "object" || value === null || value === undefined) return false;
+
+    if (Array.isArray(value)) return false;
+
+    return Object.values(value).every(v => isJsonElement(v));
+}
+
+export function isJsonArray(value: unknown): value is JsonArray {
+    const type = typeof value;
+    if (type !== "object" || value === null || value === undefined) return false;
+
+    if (!Array.isArray(value)) return false;
+
+    return value.every(e => isJsonElement(e));
+}
