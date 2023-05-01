@@ -229,13 +229,13 @@ export class PathResolver extends JsonManager {
 export class EditReadonlyError extends Error { }
 
 export type JsonElement = number | boolean | string | JsonObject | JsonArray | null;
-type _JsonObject<T extends JsonElement = JsonElement> = { [s: string]: T };
-type _JsonArray<T extends JsonElement = JsonElement> = T[];
+type _JsonObject<T extends JsonElement> = { [s: string]: T };
+type _JsonArray<T extends JsonElement> = T[];
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface JsonObject extends _JsonObject { }
+export interface JsonObject<T extends JsonElement = JsonElement> extends _JsonObject<T> { }
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface JsonArray extends _JsonArray { }
+export interface JsonArray<T extends JsonElement = JsonElement> extends _JsonArray<T> { }
 
 export function isJsonElement(value: unknown): value is JsonElement {
     const type = typeof value;
