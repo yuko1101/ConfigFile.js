@@ -71,6 +71,14 @@ export class JsonManager {
         return new PathResolver(this, newRoute);
     }
 
+    map(callback: (entry: [number | string, JsonElement]) => JsonElement): JsonManager[] {
+        const dataHere = this.getAs<JsonObject | JsonArray>();
+        if (Array.isArray(dataHere)) {
+            return dataHere.map((value, index) => callback([index, value])).map(jsonElement => new JsonManager(jsonElement, this.readonly));
+        }
+        return Object.entries(dataHere).map(callback).map(jsonElement => new JsonManager(jsonElement));
+    }
+
     has(...keys: (string | number)[]): boolean {
         const newRoute = [...this.route, ...keys];
         let obj = this.data;
