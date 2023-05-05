@@ -68,37 +68,37 @@ export class JsonManager {
 
     getAsNumber(key?: string | number | undefined): number {
         const value = this.getValue(key);
-        if (typeof value !== "number") throw new InvalidTypeError();
+        if (typeof value !== "number") throw new InvalidTypeError(value);
         return value;
     }
 
     getAsString(key?: string | number | undefined): string {
         const value = this.getValue(key);
-        if (typeof value !== "string") throw new InvalidTypeError();
+        if (typeof value !== "string") throw new InvalidTypeError(value);
         return value;
     }
 
     getAsBoolean(key?: string | number | undefined): boolean {
         const value = this.getValue(key);
-        if (typeof value !== "boolean") throw new InvalidTypeError();
+        if (typeof value !== "boolean") throw new InvalidTypeError(value);
         return value;
     }
 
     getAsNullableNumber(key?: string | number | undefined): number | null {
         const value = this.getValue(key);
-        if (typeof value !== "number" && value !== null) throw new InvalidTypeError();
+        if (typeof value !== "number" && value !== null) throw new InvalidTypeError(value);
         return value;
     }
 
     getAsNullableString(key?: string | number | undefined): string | null {
         const value = this.getValue(key);
-        if (typeof value !== "string" && value !== null) throw new InvalidTypeError();
+        if (typeof value !== "string" && value !== null) throw new InvalidTypeError(value);
         return value;
     }
 
     getAsNullableBoolean(key?: string | number | undefined): boolean | null {
         const value = this.getValue(key);
-        if (typeof value !== "boolean" && value !== null) throw new InvalidTypeError();
+        if (typeof value !== "boolean" && value !== null) throw new InvalidTypeError(value);
         return value;
     }
 
@@ -271,7 +271,11 @@ export class PathResolver extends JsonManager {
 }
 
 export class EditReadonlyError extends Error { }
-export class InvalidTypeError extends Error { }
+export class InvalidTypeError extends Error {
+    constructor(value: unknown) {
+        super(`Unexpected value ${typeof value === "string" ? `"${value}"` : value} (type: ${typeof value}) detected.`);
+    }
+}
 
 export type JsonElement = number | boolean | string | JsonObject | JsonArray | null;
 type _JsonObject<T extends JsonElement> = { [s: string]: T };
