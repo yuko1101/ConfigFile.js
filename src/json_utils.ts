@@ -66,6 +66,42 @@ export class JsonManager {
         return this.getValue(key) as T;
     }
 
+    getAsNumber(key?: string | number | undefined): number {
+        const value = this.getValue(key);
+        if (typeof value !== "number") throw new InvalidTypeError();
+        return value;
+    }
+
+    getAsString(key?: string | number | undefined): string {
+        const value = this.getValue(key);
+        if (typeof value !== "string") throw new InvalidTypeError();
+        return value;
+    }
+
+    getAsBoolean(key?: string | number | undefined): boolean {
+        const value = this.getValue(key);
+        if (typeof value !== "boolean") throw new InvalidTypeError();
+        return value;
+    }
+
+    getAsNullableNumber(key?: string | number | undefined): number | null {
+        const value = this.getValue(key);
+        if (typeof value !== "number" && value !== null) throw new InvalidTypeError();
+        return value;
+    }
+
+    getAsNullableString(key?: string | number | undefined): string | null {
+        const value = this.getValue(key);
+        if (typeof value !== "string" && value !== null) throw new InvalidTypeError();
+        return value;
+    }
+
+    getAsNullableBoolean(key?: string | number | undefined): boolean | null {
+        const value = this.getValue(key);
+        if (typeof value !== "boolean" && value !== null) throw new InvalidTypeError();
+        return value;
+    }
+
     get(...keys: (string | number)[]): PathResolver {
         const newRoute = [...this.route, ...keys];
         return new PathResolver(this, newRoute);
@@ -235,6 +271,7 @@ export class PathResolver extends JsonManager {
 }
 
 export class EditReadonlyError extends Error { }
+export class InvalidTypeError extends Error { }
 
 export type JsonElement = number | boolean | string | JsonObject | JsonArray | null;
 type _JsonObject<T extends JsonElement> = { [s: string]: T };
