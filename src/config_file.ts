@@ -33,7 +33,7 @@ export class ConfigFile extends JsonManager implements IConfigFile {
         return new ConfigPathResolver(this, newRoute);
     }
 
-    override findEntry(predicate: (entry: [number | string, JsonElement]) => boolean): ConfigPathResolver | undefined {
+    override find(predicate: (entry: [number | string, JsonElement]) => boolean): ConfigPathResolver | undefined {
         const dataHere = this.getAs<JsonObject | JsonArray>();
         const entries: [number | string, JsonElement][] = Array.isArray(dataHere) ? dataHere.map((value, index) => [index, value] as [number, JsonElement]) : Object.entries(dataHere);
         const foundEntry = entries.find(predicate);
@@ -116,7 +116,7 @@ class ConfigPathResolver extends PathResolver implements IConfigFile {
         return new ConfigPathResolver(this.configFile, newRoute);
     }
 
-    override findEntry(predicate: (entry: [number | string, JsonElement]) => boolean): ConfigPathResolver | undefined {
+    override find(predicate: (entry: [number | string, JsonElement]) => boolean): ConfigPathResolver | undefined {
         const dataHere = this.getAs<JsonObject | JsonArray>();
         const entries: [number | string, JsonElement][] = Array.isArray(dataHere) ? dataHere.map((value, index) => [index, value] as [number, JsonElement]) : Object.entries(dataHere);
         const foundEntry = entries.find(predicate);
