@@ -1,5 +1,5 @@
 import fs from "fs";
-import { JsonElement, JsonManager, PathResolver } from "./json_utils";
+import { JsonArray, JsonElement, JsonManager, JsonObject, PathResolver } from "./json_utils";
 
 interface IConfigFile extends JsonManager {
     readonly filePath: string | null;
@@ -30,6 +30,15 @@ export class ConfigFile extends JsonManager implements IConfigFile {
 
     override get(...keys: (string | number)[]): ConfigPathResolver {
         const newRoute = [...this.route, ...keys];
+        return new ConfigPathResolver(this, newRoute);
+    }
+
+    override findEntry(predicate: (entry: [number | string, JsonElement]) => boolean): ConfigPathResolver | undefined {
+        const dataHere = this.getAs<JsonObject | JsonArray>();
+        const entries: [number | string, JsonElement][] = Array.isArray(dataHere) ? dataHere.map((value, index) => [index, value] as [number, JsonElement]) : Object.entries(dataHere);
+        const foundEntry = entries.find(predicate);
+        if (foundEntry === undefined) return undefined;
+        const newRoute = [...this.route, foundEntry[0]];
         return new ConfigPathResolver(this, newRoute);
     }
 
@@ -104,6 +113,15 @@ class ConfigPathResolver extends PathResolver implements IConfigFile {
 
     override get(...keys: (string | number)[]): ConfigPathResolver {
         const newRoute = [...this.route, ...keys];
+        return new ConfigPathResolver(this.configFile, newRoute);
+    }
+
+    override findEntry(predicate: (entry: [number | string, JsonElement]) => boolean): ConfigPathResolver | undefined {
+        const dataHere = this.getAs<JsonObject | JsonArray>();
+        const entries: [number | string, JsonElement][] = Array.isArray(dataHere) ? dataHere.map((value, index) => [index, value] as [number, JsonElement]) : Object.entries(dataHere);
+        const foundEntry = entries.find(predicate);
+        if (foundEntry === undefined) return undefined;
+        const newRoute = [...this.route, foundEntry[0]];
         return new ConfigPathResolver(this.configFile, newRoute);
     }
 

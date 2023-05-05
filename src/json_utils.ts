@@ -115,6 +115,15 @@ export class JsonManager {
         return Object.entries(dataHere).map(callback).map(jsonElement => new JsonManager(jsonElement));
     }
 
+    findEntry(predicate: (entry: [number | string, JsonElement]) => boolean): PathResolver | undefined {
+        const dataHere = this.getAs<JsonObject | JsonArray>();
+        const entries: [number | string, JsonElement][] = Array.isArray(dataHere) ? dataHere.map((value, index) => [index, value] as [number, JsonElement]) : Object.entries(dataHere);
+        const foundEntry = entries.find(predicate);
+        if (foundEntry === undefined) return undefined;
+        const newRoute = [...this.route, foundEntry[0]];
+        return new PathResolver(this, newRoute);
+    }
+
     has(...keys: (string | number)[]): boolean {
         const newRoute = [...this.route, ...keys];
         let obj = this.data;
