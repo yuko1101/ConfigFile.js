@@ -84,6 +84,18 @@ export class JsonManager {
         return value;
     }
 
+    getAsJsonObject(key?: string | number | undefined): JsonObject {
+        const value = this.getValue(key);
+        if (!isJsonObject(value)) throw new InvalidTypeError(value);
+        return value;
+    }
+
+    getAsJsonArray(key?: string | number | undefined): JsonArray {
+        const value = this.getValue(key);
+        if (!isJsonArray(value)) throw new InvalidTypeError(value);
+        return value;
+    }
+
     getAsNullableNumber(key?: string | number | undefined): number | null {
         const value = this.getValue(key);
         if (typeof value !== "number" && value !== null) throw new InvalidTypeError(value);
@@ -99,6 +111,18 @@ export class JsonManager {
     getAsNullableBoolean(key?: string | number | undefined): boolean | null {
         const value = this.getValue(key);
         if (typeof value !== "boolean" && value !== null) throw new InvalidTypeError(value);
+        return value;
+    }
+
+    getAsNullableJsonObject(key?: string | number | undefined): JsonObject | null {
+        const value = this.getValue(key);
+        if (!isJsonObject(value) && value !== null) throw new InvalidTypeError(value);
+        return value;
+    }
+
+    getAsNullableJsonArray(key?: string | number | undefined): JsonArray | null {
+        const value = this.getValue(key);
+        if (!isJsonArray(value) && value !== null) throw new InvalidTypeError(value);
         return value;
     }
 
