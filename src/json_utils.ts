@@ -143,31 +143,35 @@ export class JsonManager {
 
     map<T>(callback: (entry: PathResolver) => T): T[] {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         return pathResolvers.map(callback);
     }
 
     find(predicate: (entry: PathResolver) => boolean): PathResolver | undefined {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const found = pathResolvers.find(predicate);
         return found;
     }
 
     filter(predicate: (entry: PathResolver) => boolean): PathResolver[] {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const filtered = pathResolvers.filter(predicate);
         return filtered;
     }
 
     forEach(callback: (entry: PathResolver) => void) {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const len = pathResolvers.length;
         for (let i = 0; i < len; i++) {
             callback(pathResolvers[i]);
@@ -325,7 +329,7 @@ export class JsonManager {
 export class PathResolver extends JsonManager {
     readonly manager: JsonManager;
 
-    constructor(manager: JsonManager, route: (string | number)[], currentData: JsonElement | undefined = undefined) {
+    constructor(manager: JsonManager, route: (string | number)[], currentData: JsonElement | undefined) {
         super(manager.data, manager.readonly, manager.fastMode, route);
         this._currentData = currentData;
         this.manager = manager;

@@ -44,31 +44,35 @@ export class ConfigFile extends JsonManager implements IConfigFile {
 
     override map<T>(callback: (entry: ConfigPathResolver) => T): T[] {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         return pathResolvers.map(callback);
     }
 
     override find(predicate: (entry: ConfigPathResolver) => boolean): ConfigPathResolver | undefined {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const found = pathResolvers.find(predicate);
         return found;
     }
 
     override filter(predicate: (entry: ConfigPathResolver) => boolean): ConfigPathResolver[] {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const filtered = pathResolvers.filter(predicate);
         return filtered;
     }
 
     override forEach(callback: (entry: ConfigPathResolver) => void) {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const len = pathResolvers.length;
         for (let i = 0; i < len; i++) {
             callback(pathResolvers[i]);
@@ -136,7 +140,7 @@ class ConfigPathResolver extends PathResolver implements IConfigFile {
     readonly filePath: string | null;
     readonly defaultConfig: JsonElement;
 
-    constructor(configFile: ConfigFile, route: (string | number)[], currentData: JsonElement | undefined = undefined) {
+    constructor(configFile: ConfigFile, route: (string | number)[], currentData: JsonElement | undefined) {
         super(configFile, route, currentData);
 
         this.configFile = configFile;
@@ -152,31 +156,35 @@ class ConfigPathResolver extends PathResolver implements IConfigFile {
 
     override map<T>(callback: (entry: ConfigPathResolver) => T): T[] {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this.configFile, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this.configFile, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         return pathResolvers.map(callback);
     }
 
     override find(predicate: (entry: ConfigPathResolver) => boolean): ConfigPathResolver | undefined {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this.configFile, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this.configFile, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const found = pathResolvers.find(predicate);
         return found;
     }
 
     override filter(predicate: (entry: ConfigPathResolver) => boolean): ConfigPathResolver[] {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this.configFile, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this.configFile, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const filtered = pathResolvers.filter(predicate);
         return filtered;
     }
 
     override forEach(callback: (entry: ConfigPathResolver) => void) {
         const dataHere = this.getAs<JsonObject | JsonArray>();
-        const keys: number[] | string[] = Array.isArray(dataHere) ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this.configFile, [...this.route, key]));
+        const isArray = Array.isArray(dataHere);
+        const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
+        const pathResolvers: ConfigPathResolver[] = keys.map(key => new ConfigPathResolver(this.configFile, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const len = pathResolvers.length;
         for (let i = 0; i < len; i++) {
             callback(pathResolvers[i]);
