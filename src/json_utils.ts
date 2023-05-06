@@ -7,14 +7,20 @@ export class JsonManager {
     public set data(value: JsonElement) {
         if (this.readonly) throw new EditReadonlyError();
         this._data = value;
+        if (this.fastMode) this._currentData = this.getValue(undefined, true);
     }
     readonly readonly: boolean;
+    readonly fastMode: boolean;
     readonly route: (string | number)[];
 
-    constructor(data: JsonElement, readonly = false, route: (string | number)[] = []) {
+    private _currentData: JsonElement | undefined;
+
+    constructor(data: JsonElement, readonly = false, fastMode = false, route: (string | number)[] = []) {
         this._data = data;
         this.readonly = readonly;
+        this.fastMode = fastMode;
         this.route = route;
+        this._currentData = undefined;
     }
 
     set(key: string | number, value: JsonElement): this {
@@ -32,9 +38,13 @@ export class JsonManager {
         return this;
     }
 
-    getValue(key?: string | number | undefined): JsonElement | undefined {
+    getValue(key?: string | number | undefined, disableFastMode = false): JsonElement | undefined {
         if (key === undefined) {
-            if (this.route.length === 0) return this.data;
+            if (this.fastMode && !disableFastMode && this._currentData !== undefined) return this._currentData;
+            if (this.route.length === 0) {
+                if (this.fastMode && !disableFastMode && this._currentData === undefined) this._currentData = this.data;
+                return this.data;
+            }
 
             const parent = this.getObjectByRoute(this.route.slice(0, -1));
             if (parent === null || parent === undefined) return undefined;
@@ -43,13 +53,16 @@ export class JsonManager {
 
             if (Array.isArray(parent)) {
                 if (typeof lastRouteKey !== "number") return undefined;
-                return parent[lastRouteKey as number];
+                if (this.fastMode && !disableFastMode && this._currentData === undefined) this._currentData = parent[lastRouteKey];
+                return parent[lastRouteKey];
             } else {
                 if (typeof lastRouteKey !== "string") return undefined;
-                return (parent as { [s: string]: JsonElement })[lastRouteKey as string];
+                if (this.fastMode && !disableFastMode && this._currentData === undefined) this._currentData = parent[lastRouteKey];
+                return parent[lastRouteKey];
             }
         } else {
-            const currentObject = this.getObjectByRoute(this.route);
+            if (this.fastMode && !disableFastMode && this._currentData === undefined) this._currentData = this.getObjectByRoute(this.route);
+            const currentObject = this.fastMode && !disableFastMode ? this._currentData : this.getObjectByRoute(this.route);
             if (currentObject === null || currentObject === undefined) return undefined;
 
             if (Array.isArray(currentObject)) {
@@ -165,7 +178,8 @@ export class JsonManager {
     }
 
     detach(): JsonManager {
-        return new JsonManager(this.getValue() as JsonElement, this.readonly);
+        if (this.fastMode) return new JsonManager(this._currentData as JsonElement, this.readonly, this.fastMode);
+        return new JsonManager(this.getValue() as JsonElement, this.readonly, this.fastMode);
     }
 
     asObject(): this {
@@ -233,7 +247,7 @@ export class JsonManager {
      * @param route
      * @returns Returns null if it is not an object and undefined if it does not exist.
      */
-    private getObjectByRoute(route: (string | number)[]): object | null | undefined {
+    private getObjectByRoute(route: (string | number)[]): JsonObject | JsonArray | null | undefined {
         if (this.data === null || typeof this.data !== "object") return undefined;
         let obj: JsonElement = this.data;
         for (let i = 0; i < route.length; i++) {
@@ -317,7 +331,7 @@ export class PathResolver extends JsonManager {
     readonly manager: JsonManager;
 
     constructor(manager: JsonManager, route: (string | number)[]) {
-        super(manager.data, manager.readonly, route);
+        super(manager.data, manager.readonly, manager.fastMode, route);
 
         this.manager = manager;
     }
