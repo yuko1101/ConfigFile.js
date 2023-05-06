@@ -38,7 +38,8 @@ export class ConfigFile extends JsonManager implements IConfigFile {
 
     override get(...keys: (string | number)[]): ConfigPathResolver {
         const newRoute = [...this.route, ...keys];
-        return new ConfigPathResolver(this, newRoute);
+        const currentData = (this.fastMode && this._currentData !== undefined) ? new JsonManager(this._currentData, true, false).get(...keys).getValue() : undefined;
+        return new ConfigPathResolver(this, newRoute, currentData);
     }
 
     override map<T>(callback: (entry: ConfigPathResolver) => T): T[] {
@@ -135,8 +136,8 @@ class ConfigPathResolver extends PathResolver implements IConfigFile {
     readonly filePath: string | null;
     readonly defaultConfig: JsonElement;
 
-    constructor(configFile: ConfigFile, route: (string | number)[]) {
-        super(configFile, route);
+    constructor(configFile: ConfigFile, route: (string | number)[], currentData: JsonElement | undefined = undefined) {
+        super(configFile, route, currentData);
 
         this.configFile = configFile;
         this.filePath = configFile.filePath;
@@ -145,7 +146,8 @@ class ConfigPathResolver extends PathResolver implements IConfigFile {
 
     override get(...keys: (string | number)[]): ConfigPathResolver {
         const newRoute = [...this.route, ...keys];
-        return new ConfigPathResolver(this.configFile, newRoute);
+        const currentData = (this.fastMode && this._currentData !== undefined) ? new JsonManager(this._currentData, true, false).get(...keys).getValue() : undefined;
+        return new ConfigPathResolver(this.configFile, newRoute, currentData);
     }
 
     override map<T>(callback: (entry: ConfigPathResolver) => T): T[] {

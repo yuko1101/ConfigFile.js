@@ -13,14 +13,14 @@ export class JsonManager {
     readonly fastMode: boolean;
     readonly route: (string | number)[];
 
-    private _currentData: JsonElement | undefined;
+    protected _currentData: JsonElement | undefined;
 
     constructor(data: JsonElement, readonly = false, fastMode = false, route: (string | number)[] = []) {
         this._data = data;
         this.readonly = readonly;
         this.fastMode = fastMode;
         this.route = route;
-        this._currentData = undefined;
+        this._currentData = this.route.length === 0 ? this._data : undefined;
     }
 
     set(key: string | number, value: JsonElement): this {
@@ -141,7 +141,8 @@ export class JsonManager {
 
     get(...keys: (string | number)[]): PathResolver {
         const newRoute = [...this.route, ...keys];
-        return new PathResolver(this, newRoute);
+        const currentData = (this.fastMode && this._currentData !== undefined) ? new JsonManager(this._currentData, true, false).get(...keys).getValue() : undefined;
+        return new PathResolver(this, newRoute, currentData);
     }
 
     map<T>(callback: (entry: PathResolver) => T): T[] {
@@ -291,12 +292,12 @@ export class JsonManager {
         if (typeof data !== "object" || data === null || data === undefined || (isArrayKey && !Array.isArray(data)) || (isObjectKey && Array.isArray(data))) {
             // probably need fix
             if (isArrayKey || (key === undefined && arrayAtLastPath === true)) {
-                const array: JsonElement[] = [];
+                const array: JsonArray = [];
                 if (key !== undefined) array[key] = this._createPath(null, arrayAtLastPath, changed, remainingRoute);
                 changed();
                 return array;
             } else if (isObjectKey || (key === undefined && arrayAtLastPath === false)) {
-                const obj: { [s: string]: JsonElement } = {};
+                const obj: JsonObject = {};
                 if (key !== undefined) obj[key] = this._createPath(null, arrayAtLastPath, changed, remainingRoute);
                 changed();
                 return obj;
@@ -317,12 +318,11 @@ export class JsonManager {
 
             // Needless if statement but to avoid type errors.
             if (Array.isArray(data)) {
-
-                (data as JsonElement[])[key as number] = this._createPath((data as JsonElement[])[key as number], arrayAtLastPath, changed, remainingRoute);
+                data[key as number] = this._createPath(data[key as number], arrayAtLastPath, changed, remainingRoute);
             } else {
-                (data as { [s: string]: JsonElement })[key as string] = this._createPath((data as { [s: string]: JsonElement })[key as string], arrayAtLastPath, changed, remainingRoute);
+                data[key as string] = this._createPath(data[key as string], arrayAtLastPath, changed, remainingRoute);
             }
-            return data as { [s: string]: JsonElement } | JsonElement[];
+            return data;
         }
     }
 }
@@ -330,9 +330,9 @@ export class JsonManager {
 export class PathResolver extends JsonManager {
     readonly manager: JsonManager;
 
-    constructor(manager: JsonManager, route: (string | number)[]) {
+    constructor(manager: JsonManager, route: (string | number)[], currentData: JsonElement | undefined = undefined) {
         super(manager.data, manager.readonly, manager.fastMode, route);
-
+        this._currentData = currentData;
         this.manager = manager;
     }
 
@@ -345,7 +345,8 @@ export class PathResolver extends JsonManager {
 
     override get(...keys: (string | number)[]): PathResolver {
         const newRoute = [...this.route, ...keys];
-        return new PathResolver(this.manager, newRoute);
+        const currentData = (this.fastMode && this._currentData !== undefined) ? new JsonManager(this._currentData, true, false).get(...keys).getValue() : undefined;
+        return new PathResolver(this.manager, newRoute, currentData);
     }
 
 }
