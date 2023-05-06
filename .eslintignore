@@ -1,2 +1,2 @@
 dist/
-/example/config_file.js
+/example/**/*.js

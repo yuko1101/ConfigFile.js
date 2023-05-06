@@ -1,6 +1,7 @@
 # Examples
 example/package.json
 example/package-lock.json
+example/test.js
 
 # Dev Test Folder
 dev-test/

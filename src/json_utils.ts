@@ -169,13 +169,13 @@ export class JsonManager {
         let obj = this.data;
         for (let i = 0; i < newRoute.length; i++) {
             if (obj === null || typeof obj !== "object") return false;
-
+            const key = newRoute[i];
             if (Array.isArray(obj)) {
-                if (typeof keys[i] !== "number") return false;
-                obj = obj[keys[i] as number];
+                if (typeof key !== "number") return false;
+                obj = obj[key];
             } else {
-                if (typeof keys[i] !== "string") return false;
-                obj = (obj as { [s: string]: JsonElement })[keys[i] as string];
+                if (typeof key !== "string") return false;
+                obj = obj[key];
             }
 
             if (obj === undefined) {
@@ -222,12 +222,13 @@ export class JsonManager {
         let obj: JsonElement = this.data;
         for (let i = 0; i < route.length; i++) {
             if (typeof obj !== "object" || obj === null) return undefined;
+            const key = route[i];
             if (Array.isArray(obj)) {
-                if (typeof route[i] !== "number") return undefined;
-                obj = obj[route[i] as number];
+                if (typeof key !== "number") return undefined;
+                obj = obj[key];
             } else {
-                if (typeof route[i] !== "string") return undefined;
-                obj = (obj as { [s: string]: JsonElement })[route[i] as string];
+                if (typeof key !== "string") return undefined;
+                obj = obj[key];
             }
             if (obj === undefined) return undefined;
         }
