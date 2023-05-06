@@ -178,7 +178,7 @@ export class JsonManager {
     }
 
     detach(): JsonManager {
-        if (this.fastMode) return new JsonManager(this._currentData as JsonElement, this.readonly, this.fastMode);
+        if (this.fastMode && this._currentData !== undefined) return new JsonManager(this._currentData as JsonElement, this.readonly, this.fastMode);
         return new JsonManager(this.getValue() as JsonElement, this.readonly, this.fastMode);
     }
 
