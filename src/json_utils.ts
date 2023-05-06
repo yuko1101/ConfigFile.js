@@ -137,7 +137,19 @@ export class JsonManager {
 
     get(...keys: (string | number)[]): PathResolver {
         const newRoute = [...this.route, ...keys];
-        const currentData = this.fastMode ? new JsonManager(this._currentData as JsonElement, true, false).get(...keys).getValue() : undefined;
+        let currentData: JsonElement | undefined = undefined;
+        if (this.fastMode) {
+            currentData = this._currentData;
+            const keyCount = keys.length;
+            for (let i = 0; i < keyCount; i++) {
+                const key = keys[i];
+                if (Array.isArray(currentData)) {
+                    currentData = currentData[key as number];
+                } else {
+                    currentData = (currentData as JsonObject)[key as string];
+                }
+            }
+        }
         return new PathResolver(this, newRoute, currentData);
     }
 
@@ -195,11 +207,10 @@ export class JsonManager {
     }
 
     has(...keys: (string | number)[]): boolean {
-        const newRoute = [...this.route, ...keys];
-        let obj = this.data;
-        for (let i = 0; i < newRoute.length; i++) {
+        let obj = this.getValue();
+        for (let i = 0; i < keys.length; i++) {
             if (obj === null || typeof obj !== "object") return false;
-            const key = newRoute[i];
+            const key = keys[i];
             if (Array.isArray(obj)) {
                 if (typeof key !== "number") return false;
                 obj = obj[key];
@@ -216,7 +227,7 @@ export class JsonManager {
     }
 
     exists(): boolean {
-        return this.has(...this.route);
+        return this.getValue() !== undefined;
     }
 
     resetPath(): this {
@@ -232,14 +243,14 @@ export class JsonManager {
         }
 
         this.createPath(this.route);
-        const parent = this.getObjectByRoute(this.route.slice(0, -1));
+        const parent = this.getObjectByRoute(this.route.slice(0, -1)) as JsonArray | JsonObject;
 
         const lastRouteKey = this.route.slice(-1)[0];
 
         if (Array.isArray(parent)) {
             parent[lastRouteKey as number] = value;
         } else {
-            (parent as { [s: string]: JsonElement })[lastRouteKey as string] = value;
+            parent[lastRouteKey as string] = value;
         }
     }
 
@@ -344,7 +355,19 @@ export class PathResolver extends JsonManager {
 
     override get(...keys: (string | number)[]): PathResolver {
         const newRoute = [...this.route, ...keys];
-        const currentData = this.fastMode ? new JsonManager(this._currentData as JsonElement, true, false).get(...keys).getValue() : undefined;
+        let currentData: JsonElement | undefined = undefined;
+        if (this.fastMode) {
+            currentData = this._currentData;
+            const keyCount = keys.length;
+            for (let i = 0; i < keyCount; i++) {
+                const key = keys[i];
+                if (Array.isArray(currentData)) {
+                    currentData = currentData[key as number];
+                } else {
+                    currentData = (currentData as JsonObject)[key as string];
+                }
+            }
+        }
         return new PathResolver(this.manager, newRoute, currentData);
     }
 

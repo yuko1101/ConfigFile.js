@@ -38,7 +38,19 @@ export class ConfigFile extends JsonManager implements IConfigFile {
 
     override get(...keys: (string | number)[]): ConfigPathResolver {
         const newRoute = [...this.route, ...keys];
-        const currentData = this.fastMode ? new JsonManager(this._currentData as JsonElement, true, false).get(...keys).getValue() : undefined;
+        let currentData: JsonElement | undefined = undefined;
+        if (this.fastMode) {
+            currentData = this._currentData;
+            const keyCount = keys.length;
+            for (let i = 0; i < keyCount; i++) {
+                const key = keys[i];
+                if (Array.isArray(currentData)) {
+                    currentData = currentData[key as number];
+                } else {
+                    currentData = (currentData as JsonObject)[key as string];
+                }
+            }
+        }
         return new ConfigPathResolver(this, newRoute, currentData);
     }
 
@@ -150,7 +162,19 @@ class ConfigPathResolver extends PathResolver implements IConfigFile {
 
     override get(...keys: (string | number)[]): ConfigPathResolver {
         const newRoute = [...this.route, ...keys];
-        const currentData = this.fastMode ? new JsonManager(this._currentData as JsonElement, true, false).get(...keys).getValue() : undefined;
+        let currentData: JsonElement | undefined = undefined;
+        if (this.fastMode) {
+            currentData = this._currentData;
+            const keyCount = keys.length;
+            for (let i = 0; i < keyCount; i++) {
+                const key = keys[i];
+                if (Array.isArray(currentData)) {
+                    currentData = currentData[key as number];
+                } else {
+                    currentData = (currentData as JsonObject)[key as string];
+                }
+            }
+        }
         return new ConfigPathResolver(this.configFile, newRoute, currentData);
     }
 
