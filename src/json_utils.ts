@@ -164,6 +164,22 @@ export class JsonManager {
         }
     }
 
+    detach(): JsonManager {
+        return new JsonManager(this.getValue() as JsonElement, this.readonly);
+    }
+
+    asObject(): this {
+        const dataHere = this.getAs<JsonObject | JsonArray>();
+        if (Array.isArray(dataHere)) throw new InvalidTypeError(dataHere);
+        return this;
+    }
+
+    asArray(): this {
+        const dataHere = this.getAs<JsonObject | JsonArray>();
+        if (!Array.isArray(dataHere)) throw new InvalidTypeError(dataHere);
+        return this;
+    }
+
     has(...keys: (string | number)[]): boolean {
         const newRoute = [...this.route, ...keys];
         let obj = this.data;
