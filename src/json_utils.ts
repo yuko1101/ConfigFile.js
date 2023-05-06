@@ -40,9 +40,8 @@ export class JsonManager {
 
     getValue(key?: string | number | undefined, disableFastMode = false): JsonElement | undefined {
         if (key === undefined) {
-            if (this.fastMode && !disableFastMode && this._currentData !== undefined) return this._currentData;
+            if (this.fastMode && !disableFastMode) return this._currentData;
             if (this.route.length === 0) {
-                if (this.fastMode && !disableFastMode && this._currentData === undefined) this._currentData = this.data;
                 return this.data;
             }
 
@@ -53,15 +52,12 @@ export class JsonManager {
 
             if (Array.isArray(parent)) {
                 if (typeof lastRouteKey !== "number") return undefined;
-                if (this.fastMode && !disableFastMode && this._currentData === undefined) this._currentData = parent[lastRouteKey];
                 return parent[lastRouteKey];
             } else {
                 if (typeof lastRouteKey !== "string") return undefined;
-                if (this.fastMode && !disableFastMode && this._currentData === undefined) this._currentData = parent[lastRouteKey];
                 return parent[lastRouteKey];
             }
         } else {
-            if (this.fastMode && !disableFastMode && this._currentData === undefined) this._currentData = this.getObjectByRoute(this.route);
             const currentObject = this.fastMode && !disableFastMode ? this._currentData : this.getObjectByRoute(this.route);
             if (currentObject === null || currentObject === undefined) return undefined;
 
@@ -141,7 +137,7 @@ export class JsonManager {
 
     get(...keys: (string | number)[]): PathResolver {
         const newRoute = [...this.route, ...keys];
-        const currentData = (this.fastMode && this._currentData !== undefined) ? new JsonManager(this._currentData, true, false).get(...keys).getValue() : undefined;
+        const currentData = this.fastMode ? new JsonManager(this._currentData as JsonElement, true, false).get(...keys).getValue() : undefined;
         return new PathResolver(this, newRoute, currentData);
     }
 
@@ -179,8 +175,7 @@ export class JsonManager {
     }
 
     detach(): JsonManager {
-        if (this.fastMode && this._currentData !== undefined) return new JsonManager(this._currentData as JsonElement, this.readonly, this.fastMode);
-        return new JsonManager(this.getValue() as JsonElement, this.readonly, this.fastMode);
+        return new JsonManager((this.fastMode ? this._currentData : this.getValue()) as JsonElement, this.readonly, this.fastMode);
     }
 
     asObject(): this {
@@ -345,7 +340,7 @@ export class PathResolver extends JsonManager {
 
     override get(...keys: (string | number)[]): PathResolver {
         const newRoute = [...this.route, ...keys];
-        const currentData = (this.fastMode && this._currentData !== undefined) ? new JsonManager(this._currentData, true, false).get(...keys).getValue() : undefined;
+        const currentData = this.fastMode ? new JsonManager(this._currentData as JsonElement, true, false).get(...keys).getValue() : undefined;
         return new PathResolver(this.manager, newRoute, currentData);
     }
 

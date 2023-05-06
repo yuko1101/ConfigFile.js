@@ -38,7 +38,7 @@ export class ConfigFile extends JsonManager implements IConfigFile {
 
     override get(...keys: (string | number)[]): ConfigPathResolver {
         const newRoute = [...this.route, ...keys];
-        const currentData = (this.fastMode && this._currentData !== undefined) ? new JsonManager(this._currentData, true, false).get(...keys).getValue() : undefined;
+        const currentData = this.fastMode ? new JsonManager(this._currentData as JsonElement, true, false).get(...keys).getValue() : undefined;
         return new ConfigPathResolver(this, newRoute, currentData);
     }
 
@@ -146,7 +146,7 @@ class ConfigPathResolver extends PathResolver implements IConfigFile {
 
     override get(...keys: (string | number)[]): ConfigPathResolver {
         const newRoute = [...this.route, ...keys];
-        const currentData = (this.fastMode && this._currentData !== undefined) ? new JsonManager(this._currentData, true, false).get(...keys).getValue() : undefined;
+        const currentData = this.fastMode ? new JsonManager(this._currentData as JsonElement, true, false).get(...keys).getValue() : undefined;
         return new ConfigPathResolver(this.configFile, newRoute, currentData);
     }
 
