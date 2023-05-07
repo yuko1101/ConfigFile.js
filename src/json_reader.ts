@@ -152,7 +152,7 @@ export class JsonReader {
     }
 
     // map
-    map<T>(callback: (key: string | number, json: JsonReader) => T): T[] {
+    mapEntry<T>(callback: (key: string | number, json: JsonReader) => T): T[] {
         if (this.data === null || typeof this.data !== "object") throw new InvalidTypeError(this.data);
         const isArray = Array.isArray(this.data);
         const keys = isArray ? (this.data as JsonArray).map((_, i) => i) : Object.keys(this.data as JsonObject);
@@ -189,7 +189,7 @@ export class JsonReader {
     }
 
     // find
-    find(predicate: (key: string | number, json: JsonReader) => boolean): [string | number, JsonReader] | undefined {
+    findEntry(predicate: (key: string | number, json: JsonReader) => boolean): [string | number, JsonReader] | undefined {
         if (this.data === null || typeof this.data !== "object") throw new InvalidTypeError(this.data);
         const isArray = Array.isArray(this.data);
         const keys = isArray ? (this.data as JsonArray).map((_, i) => i) : Object.keys(this.data as JsonObject);
@@ -226,7 +226,7 @@ export class JsonReader {
     }
 
     // filter
-    filter(predicate: (key: string | number, json: JsonReader) => boolean): [string | number, JsonReader][] {
+    filterEntry(predicate: (key: string | number, json: JsonReader) => boolean): [string | number, JsonReader][] {
         if (this.data === null || typeof this.data !== "object") throw new InvalidTypeError(this.data);
         const isArray = Array.isArray(this.data);
         const keys = isArray ? (this.data as JsonArray).map((_, i) => i) : Object.keys(this.data as JsonObject);
@@ -272,7 +272,7 @@ export class JsonReader {
     }
 
     // forEach
-    forEach(callback: (key: string | number, json: JsonReader) => void) {
+    forEachEntry(callback: (key: string | number, json: JsonReader) => void) {
         if (this.data === null || typeof this.data !== "object") throw new InvalidTypeError(this.data);
         const isArray = Array.isArray(this.data);
         const keys = isArray ? (this.data as JsonArray).map((_, i) => i) : Object.keys(this.data as JsonObject);
