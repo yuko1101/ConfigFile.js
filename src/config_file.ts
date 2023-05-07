@@ -1,5 +1,6 @@
 import fs from "fs";
-import { JsonArray, JsonElement, JsonManager, JsonObject, PathResolver } from "./json_utils";
+import { JsonArray, JsonElement, JsonObject } from "./json_utils";
+import { JsonManager, PathResolver } from "./json_manager";
 
 interface IConfigFile extends JsonManager {
     readonly filePath: string | null;
