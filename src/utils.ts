@@ -176,7 +176,7 @@ export function move(dirFrom: string, dirTo: string) {
         if (loadedFile.isDirectory()) {
             if (!fs.existsSync(`${dirTo}/${file}`)) fs.mkdirSync(`${dirTo}/${file}`);
             move(`${dirFrom}/${file}`, `${dirTo}/${file}`);
-            fs.rmdirSync(`${dirFrom}/${file}`);
+            fs.rmdirSync(`${dirFrom}/${file}`, { maxRetries: 3 });
         } else {
             moveFile(`${dirFrom}/${file}`, `${dirTo}/${file}`);
         }
