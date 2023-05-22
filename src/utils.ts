@@ -174,7 +174,7 @@ export function move(dirFrom: string, dirTo: string) {
     for (const file of files) {
         const loadedFile = fs.lstatSync(`${dirFrom}/${file}`);
         if (loadedFile.isDirectory()) {
-            fs.mkdirSync(`${dirTo}/${file}`);
+            if (!fs.existsSync(`${dirTo}/${file}`)) fs.mkdirSync(`${dirTo}/${file}`);
             move(`${dirFrom}/${file}`, `${dirTo}/${file}`);
             fs.rmdirSync(`${dirFrom}/${file}`);
         } else {
