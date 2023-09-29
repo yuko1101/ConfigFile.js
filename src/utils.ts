@@ -15,7 +15,6 @@ export function bindOptions(defaultOptions: { [s: string]: unknown }, options: {
 
     for (const key in options) {
         const value = options[key];
-        console.log(key, value);
         if (!defaultKeys.includes(key)) {
             // since the key is not in the default options, just add it
             result[key] = value;
