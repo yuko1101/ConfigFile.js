@@ -1,15 +1,16 @@
 import { JsonObject } from "./json_utils";
 import fs from "fs";
 
+export type IsPureObject<T> = T extends { [key: string]: unknown } ? true : false;
+export type Merged<T, U> = { [P in (keyof T | keyof U)]: P extends keyof U ? P extends keyof T ? IsPureObject<U[P]> extends true ? IsPureObject<T[P]> extends true ? Merged<T[P], U[P]> : U[P] : U[P] : U[P] : P extends keyof T ? T[P] : never };
+
 /**
  * @param defaultOptions
  * @param options
  */
-export function bindOptions(defaultOptions: { [s: string]: unknown }, options: { [s: string]: unknown }): { [s: string]: unknown } {
-    if (!options) return defaultOptions;
-    if (!defaultOptions) return options;
+export function bindOptions<T extends object, U extends object>(defaultOptions: T, options: U): Merged<T, U> {
     // TODO: use structuredClone
-    const result = { ...defaultOptions };
+    const result = { ...defaultOptions } as { [key: string]: unknown };
 
     const defaultKeys = Object.keys(result);
 
@@ -21,7 +22,7 @@ export function bindOptions(defaultOptions: { [s: string]: unknown }, options: {
             continue;
         }
         // check if the value is an pure object
-        if (typeof value === "object" && !Array.isArray(value) && value !== null && value !== undefined && value.constructor.name === "Object") {
+        if (isPureObject(value) && isPureObject(result[key])) {
             result[key] = bindOptions(result[key] as { [s: string]: unknown }, value as { [s: string]: unknown });
         } else {
             result[key] = value;
@@ -29,7 +30,14 @@ export function bindOptions(defaultOptions: { [s: string]: unknown }, options: {
     }
 
 
-    return result;
+    return result as Merged<T, U>;
+}
+
+/**
+ * @param obj
+ */
+export function isPureObject(obj: unknown): obj is { [key: string]: unknown } {
+    return typeof obj === "object" && !Array.isArray(obj) && obj !== null && obj !== undefined && obj.constructor.name === "Object";
 }
 
 /** Generates random uuid v4 */
