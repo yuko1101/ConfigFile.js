@@ -11,7 +11,7 @@ export type Merged<T, U> = { [P in (keyof T | keyof U)]: P extends keyof U ? P e
  */
 export function bindOptions<T extends PureObject, U extends PureObject>(defaultOptions: T, options: U): Merged<T, U> {
     // TODO: use structuredClone
-    const result = { ...defaultOptions } as PureObject;
+    const result = deepCopy(defaultOptions) as PureObject;
 
     const defaultKeys = Object.keys(result);
 
@@ -40,6 +40,26 @@ export function bindOptions<T extends PureObject, U extends PureObject>(defaultO
  */
 export function isPureObject(obj: unknown): obj is PureObject {
     return typeof obj === "object" && !Array.isArray(obj) && obj !== null && obj !== undefined && obj.constructor.name === "Object";
+}
+
+/**
+ * @param obj
+ */
+export function deepCopy<T>(obj: T): T {
+    if (isPureObject(obj)) {
+        const result: PureObject = {};
+        for (const key in obj) {
+            const value = obj[key];
+            if (isPureObject(value)) {
+                result[key] = deepCopy(value);
+            } else {
+                result[key] = value;
+            }
+        }
+        return result as T;
+    } else {
+        return obj;
+    }
 }
 
 /** Generates random uuid v4 */
