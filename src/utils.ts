@@ -1,9 +1,13 @@
 import { JsonObject } from "./json_utils";
 import fs from "fs";
 
+export type UnionDiff<T, U> = T extends U ? never : T; // "a"|"b", "b"|"c" => "a"
+export type UnionXOR<T, U> = UnionDiff<T, U> | UnionDiff<U, T>; // "a"|"b", "b"|"c" => "a"|"c"
+export type UnionAND<T, U> = T extends U ? T : never; // "a"|"b", "b"|"c" => "b"
+
 export type PureObject = { [key: string]: unknown };
-export type IsPureObject<T> = T extends PureObject ? true : false;
-export type Merged<T, U> = { [P in (keyof T | keyof U)]: P extends keyof U ? P extends keyof T ? IsPureObject<U[P]> extends true ? IsPureObject<T[P]> extends true ? Merged<T[P], U[P]> : U[P] : U[P] : U[P] : P extends keyof T ? T[P] : never };
+export type Merged<T, U> = { [P in UnionXOR<keyof T, keyof U>]: P extends keyof U ? U[P] : P extends keyof T ? T[P] : never } & { [P in UnionAND<keyof T, keyof U>]-?: MergeUndefinable<T[P], U[P]> };
+export type MergeUndefinable<T, U> = U extends undefined ? T extends undefined ? undefined : T : T extends undefined ? U : U extends PureObject ? T extends PureObject ? Merged<T, U> : U : U;
 
 /**
  * @param defaultOptions
@@ -13,11 +17,11 @@ export function bindOptions<T extends PureObject, U extends PureObject>(defaultO
     // TODO: use structuredClone
     const result = deepCopy(defaultOptions) as PureObject;
 
-    const defaultKeys = Object.keys(result);
+    const defaultKeys = new Set(Object.keys(result));
 
     for (const key in options) {
         const value = options[key];
-        if (!defaultKeys.includes(key)) {
+        if (!defaultKeys.has(key)) {
             // since the key is not in the default options, just add it
             result[key] = value;
             continue;
