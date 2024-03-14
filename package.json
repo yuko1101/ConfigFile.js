@@ -7,8 +7,8 @@
   "scripts": {
     "lint": "npx eslint . --config .eslintrc.json --ext .js,.jsx,.cjs,.mjs,.ts,.tsx --ignore-path .eslintignore",
     "lint:fix": "npx eslint . --config .eslintrc.json --ext .js,.jsx,.cjs,.mjs,.ts,.tsx --ignore-path .eslintignore --fix",
-    "build": "node -e \"const fs = require('fs'); if (fs.existsSync('./dist')) fs.rmSync('./dist', {recursive: true});\" && npx tsc",
-    "build:debug": "node -e \"const fs = require('fs'); if (fs.existsSync('./dist')) fs.rmSync('./dist', {recursive: true});\" && npx tsc --sourceMap",
+    "build": "node scripts/clean.js && npx tsc",
+    "build:debug": "node scripts/clean.js && npx tsc --sourceMap",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
