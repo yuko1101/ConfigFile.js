@@ -16,7 +16,7 @@ export type RequiredSome<T, K extends keyof T> = Required<Pick<T, K>> & Omit<T, 
  * the type which will be M when merged with T
  * Merged<T, Complement<T, M>> = M
  */
-export type Complement<T, M, ShowFilledProp extends boolean = true> = { [P in UnionDiff<keyof M, keyof T>]: M[P] } & { [P in UnionAND<keyof T, keyof M> as T[P] extends M[P] ? never : P]: T[P] extends PureObject ? M[P] extends PureObject ? Complement<T[P], M[P]> : M[P] : M[P] } & (ShowFilledProp extends true ? { [P in UnionAND<keyof T, keyof M> as T[P] extends M[P] ? P : never]?: M[P] } : object);
+export type Complement<T, M, ShowMatchedProps extends boolean = true> = { [P in UnionDiff<keyof M, keyof T>]: M[P] } & { [P in UnionAND<keyof T, keyof M> as T[P] extends M[P] ? never : P]: T[P] extends PureObject ? M[P] extends PureObject ? Complement<T[P], M[P]> : M[P] : M[P] } & (ShowMatchedProps extends true ? { [P in UnionAND<keyof T, keyof M> as T[P] extends M[P] ? P : never]?: M[P] } : object);
 
 /**
  * @param defaultOptions
