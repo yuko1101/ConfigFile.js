@@ -9,6 +9,15 @@ export type PureObject = { [key: string]: unknown };
 export type Merged<T, U> = { [P in UnionXOR<keyof T, keyof U>]: P extends keyof U ? U[P] : P extends keyof T ? T[P] : never } & { [P in UnionAND<keyof T, keyof U>]-?: MergeUndefinable<T[P], U[P]> };
 export type MergeUndefinable<T, U> = U extends undefined ? T extends undefined ? undefined : T : T extends undefined ? U : U extends PureObject ? T extends PureObject ? Merged<T, U> : U : U;
 
+export type PartialSome<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
+export type RequiredSome<T, K extends keyof T> = Required<Pick<T, K>> & Omit<T, K>;
+
+/**
+ * the type which will be M when merged with T
+ * Merged<T, Complement<T, M>> = M
+ */
+export type Complement<T, M, ShowFilledProp extends boolean = true> = { [P in UnionDiff<keyof M, keyof T>]: M[P] } & { [P in UnionAND<keyof T, keyof M> as T[P] extends M[P] ? never : P]: T[P] extends PureObject ? M[P] extends PureObject ? Complement<T[P], M[P]> : M[P] : M[P] } & (ShowFilledProp extends true ? { [P in UnionAND<keyof T, keyof M> as T[P] extends M[P] ? P : never]?: M[P] } : object);
+
 /**
  * @param defaultOptions
  * @param options
