@@ -1,23 +1,25 @@
-import { JsonArray, JsonElement, JsonObject, isJsonArray, isJsonObject } from "./json_utils";
+import { FlexJsonArray, FlexJsonElement, FlexJsonObject, JsonOptions, isFlexJsonArray, isFlexJsonObject } from "./json_utils";
 
 // TODO: return immutable values with structuredClone() if it is readonly.
-export class JsonManager {
-    private _data: JsonElement;
-    public get data(): JsonElement {
+export class JsonManager<O extends JsonOptions> {
+    private _data: FlexJsonElement<O>;
+    public get data(): FlexJsonElement<O> {
         return this._data;
     }
-    public set data(value: JsonElement) {
+    public set data(value: FlexJsonElement<O>) {
         if (this.readonly) throw new EditReadonlyError();
         this._data = value;
         if (this.fastMode) this._currentData = this.getValue(undefined, true);
     }
+    readonly jsonOptions: O;
     readonly readonly: boolean;
     readonly fastMode: boolean;
     readonly route: (string | number)[];
 
-    protected _currentData: JsonElement | undefined;
+    protected _currentData: FlexJsonElement<O> | undefined;
 
-    constructor(data: JsonElement, readonly = false, fastMode = false, route: (string | number)[] = []) {
+    constructor(jsonOptions: O, data: FlexJsonElement<O>, readonly = false, fastMode = false, route: (string | number)[] = []) {
+        this.jsonOptions = jsonOptions;
         this._data = data;
         this.readonly = readonly;
         this.fastMode = fastMode;
@@ -25,22 +27,22 @@ export class JsonManager {
         this._currentData = this.route.length === 0 ? this._data : undefined;
     }
 
-    set(key: string | number, value: JsonElement): this {
+    set(key: string | number, value: FlexJsonElement<O>): this {
         if (this.readonly) throw new EditReadonlyError();
         this.get(key).setHere(value);
         return this;
     }
 
-    add(value: JsonElement): this {
+    add(value: FlexJsonElement<O>): this {
         if (this.readonly) throw new EditReadonlyError();
         if (!Array.isArray(this.getValue())) this.setHere([]);
 
-        (this.getValue() as JsonElement[]).push(value);
+        (this.getValue() as FlexJsonElement<O>[]).push(value);
 
         return this;
     }
 
-    getValue(key?: string | number | undefined, disableFastMode = false): JsonElement | undefined {
+    getValue(key?: string | number | undefined, disableFastMode = false): FlexJsonElement<O> | undefined {
         if (key === undefined) {
             if (this.fastMode && !disableFastMode) return this._currentData;
             if (this.route.length === 0) {
@@ -68,12 +70,12 @@ export class JsonManager {
                 return currentObject[key as number];
             } else {
                 if (typeof key !== "string") return undefined;
-                return (currentObject as { [s: string]: JsonElement })[key as string];
+                return (currentObject as { [s: string]: FlexJsonElement<O> })[key as string];
             }
         }
     }
 
-    getAs<T extends JsonElement | undefined>(key?: string | number | undefined): T {
+    getAs<T extends FlexJsonElement<O> | undefined>(key?: string | number | undefined): T {
         return this.getValue(key) as T;
     }
 
@@ -95,15 +97,22 @@ export class JsonManager {
         return value;
     }
 
-    getAsJsonObject(key?: string | number | undefined): JsonObject {
+    getAsBigint(key?: string | number | undefined): O["allowBigint"] extends true ? bigint : never {
+        if (!this.jsonOptions.allowBigint) throw new Error("Bigint is not allowed in this JsonManager.");
         const value = this.getValue(key);
-        if (!isJsonObject(value)) throw new InvalidTypeError(value);
+        if (typeof value !== "bigint") throw new InvalidTypeError(value);
         return value;
     }
 
-    getAsJsonArray(key?: string | number | undefined): JsonArray {
+    getAsJsonObject(key?: string | number | undefined): FlexJsonObject<O> {
         const value = this.getValue(key);
-        if (!isJsonArray(value)) throw new InvalidTypeError(value);
+        if (!isFlexJsonObject(this.jsonOptions, value)) throw new InvalidTypeError(value);
+        return value;
+    }
+
+    getAsJsonArray(key?: string | number | undefined): FlexJsonArray<O> {
+        const value = this.getValue(key);
+        if (!isFlexJsonArray(this.jsonOptions, value)) throw new InvalidTypeError(value);
         return value;
     }
 
@@ -125,21 +134,29 @@ export class JsonManager {
         return value;
     }
 
-    getAsNullableJsonObject(key?: string | number | undefined): JsonObject | null {
+    getAsNullableBigint(key?: string | number | undefined): O["allowBigint"] extends true ? bigint | null : never {
+        if (!this.jsonOptions.allowBigint) throw new Error("Bigint is not allowed in this JsonManager.");
         const value = this.getValue(key);
-        if (!isJsonObject(value) && value !== null) throw new InvalidTypeError(value);
+        if (typeof value !== "bigint" && value !== null) throw new InvalidTypeError(value);
+        // TODO: remove casting
+        return value as O["allowBigint"] extends true ? bigint | null : never;
+    }
+
+    getAsNullableJsonObject(key?: string | number | undefined): FlexJsonObject<O> | null {
+        const value = this.getValue(key);
+        if (!isFlexJsonObject(this.jsonOptions, value) && value !== null) throw new InvalidTypeError(value);
         return value;
     }
 
-    getAsNullableJsonArray(key?: string | number | undefined): JsonArray | null {
+    getAsNullableJsonArray(key?: string | number | undefined): FlexJsonArray<O> | null {
         const value = this.getValue(key);
-        if (!isJsonArray(value) && value !== null) throw new InvalidTypeError(value);
+        if (!isFlexJsonArray(this.jsonOptions, value) && value !== null) throw new InvalidTypeError(value);
         return value;
     }
 
-    get(...keys: (string | number)[]): PathResolver {
+    get(...keys: (string | number)[]): PathResolver<O> {
         const newRoute = [...this.route, ...keys];
-        let currentData: JsonElement | undefined = undefined;
+        let currentData: FlexJsonElement<O> | undefined = undefined;
         if (this.fastMode) {
             currentData = this._currentData;
             const keyCount = keys.length;
@@ -148,62 +165,62 @@ export class JsonManager {
                 if (Array.isArray(currentData)) {
                     currentData = currentData[key as number];
                 } else {
-                    currentData = (currentData as JsonObject)[key as string];
+                    currentData = (currentData as FlexJsonObject<O>)[key as string];
                 }
             }
         }
         return new PathResolver(this, newRoute, currentData);
     }
 
-    map<T>(callback: (entry: PathResolver) => T): T[] {
-        const dataHere = this.getAs<JsonObject | JsonArray>();
+    map<T>(callback: (entry: PathResolver<O>) => T): T[] {
+        const dataHere = this.getAs<FlexJsonObject<O> | FlexJsonArray<O>>();
         const isArray = Array.isArray(dataHere);
         const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
+        const pathResolvers: PathResolver<O>[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         return pathResolvers.map(callback);
     }
 
-    find(predicate: (entry: PathResolver) => boolean): PathResolver | undefined {
-        const dataHere = this.getAs<JsonObject | JsonArray>();
+    find(predicate: (entry: PathResolver<O>) => boolean): PathResolver<O> | undefined {
+        const dataHere = this.getAs<FlexJsonObject<O> | FlexJsonArray<O>>();
         const isArray = Array.isArray(dataHere);
         const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
+        const pathResolvers: PathResolver<O>[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const found = pathResolvers.find(predicate);
         return found;
     }
 
-    filter(predicate: (entry: PathResolver) => boolean): PathResolver[] {
-        const dataHere = this.getAs<JsonObject | JsonArray>();
+    filter(predicate: (entry: PathResolver<O>) => boolean): PathResolver<O>[] {
+        const dataHere = this.getAs<FlexJsonObject<O> | FlexJsonArray<O>>();
         const isArray = Array.isArray(dataHere);
         const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
+        const pathResolvers: PathResolver<O>[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const filtered = pathResolvers.filter(predicate);
         return filtered;
     }
 
-    forEach(callback: (entry: PathResolver) => void) {
-        const dataHere = this.getAs<JsonObject | JsonArray>();
+    forEach(callback: (entry: PathResolver<O>) => void) {
+        const dataHere = this.getAs<FlexJsonObject<O> | FlexJsonArray<O>>();
         const isArray = Array.isArray(dataHere);
         const keys: number[] | string[] = isArray ? dataHere.map((_, i) => i) : Object.keys(dataHere);
-        const pathResolvers: PathResolver[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
+        const pathResolvers: PathResolver<O>[] = keys.map(key => new PathResolver(this, [...this.route, key], this.fastMode ? (isArray ? dataHere[key as number] : dataHere[key as string]) : undefined));
         const len = pathResolvers.length;
         for (let i = 0; i < len; i++) {
             callback(pathResolvers[i]);
         }
     }
 
-    detach(): JsonManager {
-        return new JsonManager((this.fastMode ? this._currentData : this.getValue()) as JsonElement, this.readonly, this.fastMode);
+    detach(): JsonManager<O> {
+        return new JsonManager(this.jsonOptions, (this.fastMode ? this._currentData : this.getValue()) as FlexJsonElement<O>, this.readonly, this.fastMode);
     }
 
     asObject(): this {
-        const dataHere = this.getAs<JsonObject | JsonArray>();
+        const dataHere = this.getAs<FlexJsonObject<O> | FlexJsonArray<O>>();
         if (Array.isArray(dataHere)) throw new InvalidTypeError(dataHere);
         return this;
     }
 
     asArray(): this {
-        const dataHere = this.getAs<JsonObject | JsonArray>();
+        const dataHere = this.getAs<FlexJsonObject<O> | FlexJsonArray<O>>();
         if (!Array.isArray(dataHere)) throw new InvalidTypeError(dataHere);
         return this;
     }
@@ -237,7 +254,7 @@ export class JsonManager {
         return this;
     }
 
-    private setHere(value: JsonElement) {
+    private setHere(value: FlexJsonElement<O>) {
         if (this.readonly) throw new EditReadonlyError();
         if (this.route.length === 0) {
             this.data = value;
@@ -245,7 +262,7 @@ export class JsonManager {
         }
 
         this.createPath(this.route);
-        const parent = this.getObjectByRoute(this.route.slice(0, -1)) as JsonArray | JsonObject;
+        const parent = this.getObjectByRoute(this.route.slice(0, -1)) as FlexJsonArray<O> | FlexJsonObject<O>;
 
         const lastRouteKey = this.route.slice(-1)[0];
 
@@ -260,9 +277,9 @@ export class JsonManager {
      * @param route
      * @returns Returns null if it is not an object and undefined if it does not exist.
      */
-    private getObjectByRoute(route: (string | number)[]): JsonObject | JsonArray | null | undefined {
+    private getObjectByRoute(route: (string | number)[]): FlexJsonObject<O> | FlexJsonArray<O> | null | undefined {
         if (this.data === null || typeof this.data !== "object") return undefined;
-        let obj: JsonElement = this.data;
+        let obj: FlexJsonElement<O> = this.data;
         for (let i = 0; i < route.length; i++) {
             if (typeof obj !== "object" || obj === null) return undefined;
             const key = route[i];
@@ -296,7 +313,7 @@ export class JsonManager {
         return isChanged;
     }
 
-    private _createPath(data: JsonElement, arrayAtLastPath: boolean | null, changed: () => void, remainingRoute: (string | number)[] = []): JsonElement {
+    private _createPath(data: FlexJsonElement<O>, arrayAtLastPath: boolean | null, changed: () => void, remainingRoute: (string | number)[] = []): FlexJsonElement<O> {
         if (this.readonly) throw new EditReadonlyError();
         const key = remainingRoute.shift();
         const isArrayKey = typeof key === "number";
@@ -304,12 +321,12 @@ export class JsonManager {
         if (typeof data !== "object" || data === null || data === undefined || (isArrayKey && !Array.isArray(data)) || (isObjectKey && Array.isArray(data))) {
             // probably need fix
             if (isArrayKey || (key === undefined && arrayAtLastPath === true)) {
-                const array: JsonArray = [];
+                const array: FlexJsonArray<O> = [];
                 if (key !== undefined) array[key] = this._createPath(null, arrayAtLastPath, changed, remainingRoute);
                 changed();
                 return array;
             } else if (isObjectKey || (key === undefined && arrayAtLastPath === false)) {
-                const obj: JsonObject = {};
+                const obj: FlexJsonObject<O> = {};
                 if (key !== undefined) obj[key] = this._createPath(null, arrayAtLastPath, changed, remainingRoute);
                 changed();
                 return obj;
@@ -339,25 +356,25 @@ export class JsonManager {
     }
 }
 
-export class PathResolver extends JsonManager {
-    readonly manager: JsonManager;
+export class PathResolver<O extends JsonOptions> extends JsonManager<O> {
+    readonly manager: JsonManager<O>;
 
-    constructor(manager: JsonManager, route: (string | number)[], currentData: JsonElement | undefined) {
-        super(manager.data, manager.readonly, manager.fastMode, route);
+    constructor(manager: JsonManager<O>, route: (string | number)[], currentData: FlexJsonElement<O> | undefined) {
+        super(manager.jsonOptions, manager.data, manager.readonly, manager.fastMode, route);
         this._currentData = currentData;
         this.manager = manager;
     }
 
-    public override get data(): JsonElement {
+    public override get data(): FlexJsonElement<O> {
         return this.manager.data;
     }
-    public override set data(value: JsonElement) {
+    public override set data(value: FlexJsonElement<O>) {
         this.manager.data = value;
     }
 
-    override get(...keys: (string | number)[]): PathResolver {
+    override get(...keys: (string | number)[]): PathResolver<O> {
         const newRoute = [...this.route, ...keys];
-        let currentData: JsonElement | undefined = undefined;
+        let currentData: FlexJsonElement<O> | undefined = undefined;
         if (this.fastMode) {
             currentData = this._currentData;
             const keyCount = keys.length;
@@ -366,7 +383,7 @@ export class PathResolver extends JsonManager {
                 if (Array.isArray(currentData)) {
                     currentData = currentData[key as number];
                 } else {
-                    currentData = (currentData as JsonObject)[key as string];
+                    currentData = (currentData as FlexJsonObject<O>)[key as string];
                 }
             }
         }

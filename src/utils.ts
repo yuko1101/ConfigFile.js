@@ -1,4 +1,4 @@
-import { JsonObject } from "./json_utils";
+import { FlexJsonObject, JsonOptions } from "./json_utils";
 import fs from "fs";
 
 export type UnionDiff<T, U> = T extends U ? never : T; // "a"|"b", "b"|"c" => "a"
@@ -109,7 +109,7 @@ export function separateByValue<T>(array: T[], callback: (element: T) => string)
  * @param obj
  * @param newKeys
  */
-export function renameKeys(obj: JsonObject, newKeys: { [from: string]: string }) {
+export function renameKeys<O extends JsonOptions>(obj: FlexJsonObject<O>, newKeys: { [from: string]: string }) {
     const keyValues = Object.keys(obj).map(key => {
         const newKey = newKeys[key] || key;
         return { [newKey]: obj[key] };
